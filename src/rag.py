@@ -129,8 +129,20 @@ def retrieve_chunks(question, k=4):
     #]
     #The [0] gets the first query's results
     documents = results["documents"][0]
+    metadatas = results["metadatas"][0]
 
-    return documents
+    chunks = []
+
+    for document, metadata in zip(documents, metadatas):
+
+        chunks.append(
+            {
+                "text": document,
+                "source": metadata["source_file"]
+            }
+        )
+
+    return chunks
 
 
 def _genai_client():

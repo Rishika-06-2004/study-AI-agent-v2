@@ -1,10 +1,17 @@
 from rag import retrieve_chunks, _genai_client
 from prompts import qa_prompt, summary_prompt, flashcard_prompt
 
+def build_context(chunks):
+    return "\n\n".join(
+        chunk["text"]
+        for chunk in chunks
+    )
+
+
 def ask_gemini(question):
     chunks = retrieve_chunks(question)  #Retrieve relevant chunks
 
-    context = "\n\n".join(chunks)
+    context = build_context(chunks)
 
     #Use the retrieved information from my PDF to answer the question.
     #This is the important part that makes it RAG,
@@ -25,7 +32,7 @@ def ask_gemini(question):
 def generate_summary(level):
     chunks = retrieve_chunks("main topics and important concepts")
 
-    context = "\n\n".join(chunks)
+    context = build_context(chunks)
 
     prompt = prompt = summary_prompt(context, level)
 
@@ -42,7 +49,7 @@ def generate_summary(level):
 def generate_flashcards(level):
     chunks = retrieve_chunks("important concepts definitions key facts")
 
-    context = "\n\n".join(chunks)
+    context = build_context(chunks)
 
     prompt = prompt = flashcard_prompt(context, level)
 

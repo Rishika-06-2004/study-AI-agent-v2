@@ -1,27 +1,41 @@
 from tools import ask_gemini, generate_summary, generate_flashcards
 
-def study_agent(request):
+
+def detect_level(request):
     request_lower = request.lower()
 
-    # Detect student level
     if "beginner" in request_lower:
-        level = "beginner"
+        return "beginner"
 
-    elif "advanced" in request_lower:
-        level = "advanced"
+    if "advanced" in request_lower:
+        return "advanced"
 
-    elif "intermediate" in request_lower:
-        level = "intermediate"
+    if "intermediate" in request_lower:
+        return "intermediate"
 
-    else:
-        level = "intermediate"
+    return "intermediate"
 
-    # Detect requested task
+
+def detect_task(request):
+    request_lower = request.lower()
+
     if "summary" in request_lower or "summarize" in request_lower:
+        return "summary"
+
+    if "flashcard" in request_lower:
+        return "flashcards"
+
+    return "question"
+
+
+def study_agent(request):
+    level = detect_level(request)
+    task = detect_task(request)
+
+    if task == "summary":
         return generate_summary(level)
 
-    elif "flashcard" in request_lower:
+    if task == "flashcards":
         return generate_flashcards(level)
 
-    else:
-        return ask_gemini(request)
+    return ask_gemini(request)
