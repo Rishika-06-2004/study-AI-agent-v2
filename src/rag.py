@@ -1,12 +1,12 @@
-import functools #Enhances functions (like caching data)
-import os #Interacts with your operating system (like reading file paths or API keys)
 import re #Matches and manipulates complex text patterns
+import os
 
 import chromadb #This gives us the ChromaDB vector database
 from chromadb.utils import embedding_functions #This lets ChromaDB use an embedding model
 from dotenv import load_dotenv #Python to load values from your .env file
 from google import genai
-from pypdf import PdfReader #we'll use to extract text from the uploaded PDF
+
+from loaders import extract_text
 
 load_dotenv()
 
@@ -36,18 +36,6 @@ def chunk_text(text, chunk_size=CHUNK_SIZE, overlap=CHUNK_OVERLAP):
     return chunks
 
 
-def extract_pdf_text(source):
-    reader = PdfReader(source)
-
-    pages = []
-
-    for page in reader.pages:  #Go through every page of the PDF
-        text = page.extract_text() or ""
-        pages.append(text)
-
-    return "\n\n".join(pages)  #Combine all pages into one large text string
-
-
 def get_collection():
     client = chromadb.PersistentClient(path=CHROMA_DIR) #creates a ChromaDB client
 
@@ -74,12 +62,12 @@ def get_collection():
     return collection
 
 
-def ingest_pdf(source, filename):
+def ingest_file(source, filename):
 
     #Gets/opens our ChromaDB collection where we will store the PDF chunks
     collection = get_collection()
 
-    text = extract_pdf_text(source)
+    text = extract_text(source, filename)
     chunks = chunk_text(text)
 
     if not chunks:
@@ -145,78 +133,5 @@ def retrieve_chunks(question, k=4):
     return documents
 
 
-
-def ask_gemini(question):
-    chunks = retrieve_chunks(question)  #Retrieve relevant chunks
-
-    context = "\n\n".join(chunks)
-
-    #Use the retrieved information from my PDF to answer the question.
-    #This is the important part that makes it RAG,
-    #rather than simply asking Gemini a general question
-
-    prompt = f"""You are a study assistant.
-    Answer the question using only the information provided in the context.Context:
-    {context}
-    Question:
-    {question}
-    Answer clearly and concisely."""
-
-    client = _genai_client()
-
-    response = client.models.generate_content(
-        model="gemini-3.6-flash",
-        contents=prompt
-    )
-
-    return response.text
-
-
-def generate_summary():
-    chunks = retrieve_chunks("main topics and important concepts")
-
-    context = "\n\n".join(chunks)
-
-    prompt = f"""You are an educational study-guide assistant.
-    Create a concise study summary using only the information
-    provided in the context.
-    Context:
-    {context}
-    Organize the summary with:
-    - Main topics
-    - Important concepts
-    - Key definitions
-    - Important points
-    Do not add information that is not present in the context."""
-
-    client = _genai_client()
-
-    response = client.models.generate_content(
-        model="gemini-3.6-flash",
-        contents=prompt
-    )
-
-    return response.text
-
 def _genai_client():
     return genai.Client(api_key=os.environ["GEMINI_API_KEY"])
-
-
-if __name__ == "__main__":
-    pdf_path = "data/DSP-1.pdf"
-
-    with open(pdf_path, "rb") as f:
-        count = ingest_pdf(f, "DSP-1.pdf")
-
-    print("ChromaDB connected successfully.")
-    print("Ingested chunks:", count)
-
-    question = "What is sampling?"
-
-    answer = ask_gemini(question)
-
-    print("\nQuestion:")
-    print(question)
-
-    print("\nGemini answer:")
-    print(answer)
