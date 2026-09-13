@@ -4,7 +4,8 @@ An AI-powered study guide generation system that uses **Retrieval-Augmented Gene
 
 The system supports **PDF, TXT, and CSV** files and can generate **summaries, Q&A responses, and flashcards** for beginner, intermediate, and advanced students.
 
----
+The application also provides a **persistent history feature** that stores previous user requests and generated AI results in a local `history.json` file and displays them in the Streamlit sidebar.
+
 
 ## 📌 Project Overview
 
@@ -20,8 +21,10 @@ It:
 - Uses Gemini to generate study material
 - Supports different student levels
 - Provides a Streamlit web interface
+- Saves previous requests and generated results
+- Displays previous study material in the History sidebar
+- Maintains persistent history using `history.json`
 
----
 
 ## 🎯 Objectives
 
@@ -30,47 +33,55 @@ It:
 3. Use RAG to ground AI responses in uploaded material.
 4. Provide personalized learning levels.
 5. Generate summaries, Q&A, and flashcards.
-6. Demonstrate Generative AI, embeddings, vector databases, and agent workflows.
+6. Store previous study requests and generated results.
+7. Provide a history interface for reviewing previous results.
+8. Demonstrate Generative AI, embeddings, vector databases, and agent workflows.
 
----
 
 ## 🏗️ Architecture
 
-```text
-              Course Material
-             PDF / TXT / CSV
-                    │
-                    ▼
-              Text Extraction
-                    │
-                    ▼
-                 Chunking
-                    │
-                    ▼
-                Embeddings
-                    │
-                    ▼
-                ChromaDB
-                    │
-                    ▼
-              Semantic Retrieval
-                    │
-                    ▼
-                Study Agent
-                    │
-          ┌─────────┼─────────┐
-          ▼         ▼         ▼
-       Summary     Q&A    Flashcards
-          │         │         │
-          └─────────┼─────────┘
-                    ▼
-                  Gemini
-                    │
-                    ▼
-              Streamlit UI
-```
 
----
+                 Course Material
+                PDF / TXT / CSV
+                       │
+                       ▼
+                Text Extraction
+                       │
+                       ▼
+                    Chunking
+                       │
+                       ▼
+                  Embeddings
+                       │
+                       ▼
+                   ChromaDB
+                       │
+                       ▼
+              Semantic Retrieval
+                       │
+                       ▼
+                  Study Agent
+                       │
+              ┌────────┼────────┐
+              ▼        ▼        ▼
+           Summary     Q&A   Flashcards
+              │        │        │
+              └────────┼────────┘
+                       ▼
+              ChromaDB Retrieval
+                       ▼
+                    Gemini
+                       │
+                       ▼
+              Generated Result
+                       │
+              ┌────────┴────────┐
+              ▼                 ▼
+        Streamlit UI         History
+              │                 │
+              ▼                 ▼
+           Student         history.json
+
 
 ## 🧠 How It Works
 
@@ -86,7 +97,7 @@ The user uploads a:
 
 The system:
 
-```text
+text
 File
  ↓
 Text Extraction
@@ -96,7 +107,6 @@ Chunking
 Embeddings
  ↓
 ChromaDB
-```
 
 ### 3. Retrieve
 
@@ -106,35 +116,35 @@ When the user asks a question or requests study material, relevant chunks are re
 
 The retrieved context is provided to Gemini to generate the requested study material.
 
----
+### 5. Save History
+
+After generating study material, the application saves the user's request and the generated result in `history.json`.
+
+User Request
+     ↓
+Study Agent
+     ↓
+Gemini
+     ↓
+Generated Result
+     ↓
+history.json
+
 
 ## 🤖 Study Agent
 
 The study agent identifies the requested task and difficulty level.
 
 Examples:
-
-```text
 Create a beginner summary
-```
-
-```text
 Create an intermediate summary
-```
-
-```text
 Create advanced flashcards
-```
 
 For normal questions, a level is not required:
 
-```text
 What is sampling?
-```
 
 If no level is specified for a summary or flashcard request, **intermediate** is used by default.
-
----
 
 ## 📖 Features
 
@@ -148,11 +158,9 @@ Supports:
 
 Examples:
 
-```text
 Create a beginner summary
 Create an intermediate summary
 Create an advanced summary
-```
 
 ### Q&A
 
@@ -160,13 +168,8 @@ Ask questions about the uploaded material.
 
 Examples:
 
-```text
 What is sampling?
-```
-
-```text
 Explain the Nyquist sampling theorem.
-```
 
 ### Flashcards
 
@@ -174,17 +177,27 @@ Generates five flashcards based on the course material.
 
 Examples:
 
-```text
 Create beginner flashcards
 Create intermediate flashcards
 Create advanced flashcards
-```
 
----
+### 📜 History
+
+The application provides a persistent history feature.
+
+Every time the user generates study material, the application saves:
+
+- User request
+- Generated AI result
+
+The data is stored locally in:  history.json
+
+1. Create advanced flashcards
+2. What is sampling?
+3. Create beginner summary
 
 ## 📁 Project Structure
 
-```text
 study-AI-agent-v2/
 │
 ├── data/
@@ -199,12 +212,13 @@ study-AI-agent-v2/
 │   └── tools.py
 │
 ├── chroma_db/
+├── history.json
 ├── .env
 ├── .gitignore
 ├── pyproject.toml
 ├── uv.lock
 └── README.md
-```
+
 
 | File | Purpose |
 |---|---|
@@ -214,8 +228,8 @@ study-AI-agent-v2/
 | `tools.py` | Summary, Q&A and flashcard generation |
 | `agent.py` | Task and level detection |
 | `app.py` | Streamlit interface |
+| `history.json` | Stores previous user requests and generated AI results |
 
----
 
 ## 🛠️ Technologies
 
@@ -270,19 +284,11 @@ http://localhost:8501
 
 Upload your course material.
 
-Example:
-
-```text
-DSP-1.pdf
-```
+Example:  DSP-1.pdf
 
 ### Step 2
 
-Click:
-
-```text
-Process Material
-```
+Click:  Process Material
 
 The system extracts the text, creates chunks and stores embeddings in ChromaDB.
 
@@ -290,31 +296,20 @@ The system extracts the text, creates chunks and stores embeddings in ChromaDB.
 
 Enter a request.
 
-Examples:
+Examples:  Create a beginner summary
 
-```text
-Create a beginner summary
-```
-
-```text
 Create advanced flashcards
-```
-
-```text
 What is sampling?
-```
 
 ### Step 4
 
-Click:
-
-```text
-Generate Study Material
-```
+Click:   Generate Study Material
 
 The generated result will appear in the Streamlit interface.
 
----
+### Step 5
+
+View your previous requests and generated results in the:  📜 History
 
 ## 🧪 Testing
 
@@ -349,7 +344,6 @@ summary
 
 ## 🔄 Example Workflow
 
-```text
 Professor uploads DSP-1.pdf
             ↓
       Process Material
@@ -371,9 +365,13 @@ Student enters request
           Gemini
             ↓
      Generated Study Guide
-```
+              ↓
+        Save to History
+            ↓
+        history.json
+            ↓
+       History Sidebar
 
----
 
 ## ⚠️ Limitations
 
@@ -382,6 +380,8 @@ Student enters request
 - Scanned/image-only PDFs may require OCR.
 - Retrieval quality depends on the uploaded material and embedding model.
 - The current agent uses request-based task and difficulty detection rather than fully autonomous LLM tool selection.
+- History is currently stored locally in `history.json`.
+- History is not stored in a separate database.
 
 ---
 

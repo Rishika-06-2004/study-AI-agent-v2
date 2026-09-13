@@ -1,14 +1,26 @@
-# Python-generated files
-_pycache_/
-*.py[oc]
-build/
-dist/
-wheels/
-*.egg-info
+# Python cache
+__pycache__/
+*.py[cod]
 
 # Virtual environments
-.venv
+.venv/
+.venv-1/
+
+# Environment variables and API keys
 .env
 
-# Vector DB storage
+# ChromaDB database
 chroma_db/
+
+# History
+history.json
+
+# Streamlit local configuration
+.streamlit/
+
+# VS Code settings
+.vscode/
+
+# OS generated files
+.DS_Store
+Thumbs.db
